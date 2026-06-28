@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResumePro — Land More Interviews</title>
+<style>
+  :root {
+    --ink: #111;
+    --ink2: #444;
+    --ink3: #888;
+    --bg: #f9f9f7;
+    --white: #fff;
+    --accent: #2563eb;
+    --accent-dark: #1d4ed8;
+    --accent-bg: #eff6ff;
+    --green: #16a34a;
+    --green-bg: #f0fdf4;
+    --border: #e5e5e3;
+    --radius: 12px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--ink); background: var(--white); line-height: 1.6; }
+
+  /* NAV */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); padding: .875rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+  .nav-logo { font-size: 17px; font-weight: 800; letter-spacing: -.03em; }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; align-items: center; gap: 1.75rem; }
+  .nav-links a { font-size: 14px; color: var(--ink2); text-decoration: none; font-weight: 500; transition: color .15s; }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-cta { padding: 8px 18px; background: var(--accent); color: #fff; border-radius: 8px; font-size: 14px; font-weight: 700; text-decoration: none; transition: background .15s; }
+  .nav-cta:hover { background: var(--accent-dark); color: #fff; }
+
+  /* HERO */
+  .hero { padding: 6rem 2rem 5rem; text-align: center; max-width: 780px; margin: 0 auto; }
+  .hero-eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); background: var(--accent-bg); padding: 5px 14px; border-radius: 20px; margin-bottom: 1.5rem; }
+  .hero h1 { font-size: clamp(2.2rem, 5vw, 3.5rem); font-weight: 900; letter-spacing: -.04em; line-height: 1.1; margin-bottom: 1.25rem; color: var(--ink); }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero-sub { font-size: 1.125rem; color: var(--ink2); max-width: 520px; margin: 0 auto 2.25rem; line-height: 1.7; }
+  .hero-actions { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+  .btn-primary { padding: 14px 28px; background: var(--accent); color: #fff; border-radius: var(--radius); font-size: 15px; font-weight: 700; text-decoration: none; transition: background .15s; }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-ghost { padding: 13px 24px; background: none; color: var(--ink2); border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 15px; font-weight: 600; text-decoration: none; transition: border-color .15s; }
+  .btn-ghost:hover { border-color: var(--ink2); }
+  .hero-trust { margin-top: 2rem; font-size: 13px; color: var(--ink3); display: flex; align-items: center; justify-content: center; gap: 1.25rem; flex-wrap: wrap; }
+  .trust-item { display: flex; align-items: center; gap: 5px; }
+  .trust-check { color: var(--green); font-size: 14px; }
+
+  /* SOCIAL PROOF BAR */
+  .proof-bar { background: var(--bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 1.25rem 2rem; }
+  .proof-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-around; gap: 1rem; flex-wrap: wrap; }
+  .proof-stat { text-align: center; }
+  .proof-num { font-size: 28px; font-weight: 900; letter-spacing: -.03em; color: var(--ink); }
+  .proof-label { font-size: 12px; color: var(--ink3); margin-top: 2px; }
+
+  /* SECTION SHARED */
+  section { padding: 5rem 2rem; }
+  .section-inner { max-width: 900px; margin: 0 auto; }
+  .section-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); font-weight: 700; margin-bottom: 10px; }
+  .section-title { font-size: clamp(1.6rem, 3vw, 2.25rem); font-weight: 800; letter-spacing: -.03em; margin-bottom: .75rem; }
+  .section-desc { font-size: 1rem; color: var(--ink2); max-width: 520px; line-height: 1.7; }
+
+  /* HOW IT WORKS */
+  .how { background: var(--bg); }
+  .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-top: 3rem; }
+  .step-card { }
+  .step-num { width: 36px; height: 36px; border-radius: 10px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; }
+  .step-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .step-desc { font-size: 14px; color: var(--ink2); line-height: 1.6; }
+
+  /* BEFORE/AFTER */
+  .ba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2.5rem; }
+  .ba-card { border-radius: var(--radius); padding: 1.25rem; }
+  .ba-card.before { background: #fef2f2; border: 1px solid #fecaca; }
+  .ba-card.after { background: var(--green-bg); border: 1px solid #bbf7d0; }
+  .ba-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+  .ba-card.before .ba-label { color: #dc2626; }
+  .ba-card.after .ba-label { color: var(--green); }
+  .ba-content { font-size: 13px; line-height: 1.75; color: var(--ink2); }
+  .ba-content strong { color: var(--ink); }
+
+  /* PRICING */
+  .pricing { background: var(--bg); }
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-top: 3rem; }
+  .pricing-card { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 1.75rem; display: flex; flex-direction: column; }
+  .pricing-card.featured { border-color: var(--accent); border-width: 2px; }
+  .featured-badge { font-size: 11px; font-weight: 700; background: var(--accent-bg); color: var(--accent); padding: 4px 10px; border-radius: 20px; display: inline-block; margin-bottom: 10px; }
+  .pricing-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .pricing-price { font-size: 36px; font-weight: 900; letter-spacing: -.04em; margin-bottom: 4px; }
+  .pricing-turnaround { font-size: 12px; color: var(--ink3); margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+  .pricing-features { list-style: none; flex: 1; margin-bottom: 1.5rem; }
+  .pricing-features li { font-size: 13px; color: var(--ink2); padding: 5px 0; display: flex; gap: 8px; }
+  .pricing-features li::before { content: '✓'; color: var(--green); flex-shrink: 0; font-weight: 700; }
+  .pricing-cta { display: block; text-align: center; padding: 11px; background: var(--accent); color: #fff; border-radius: 8px; font-size: 14px; font-weight: 700; text-decoration: none; transition: background .15s; }
+  .pricing-cta:hover { background: var(--accent-dark); }
+  .pricing-card:not(.featured) .pricing-cta { background: none; color: var(--accent); border: 1.5px solid var(--accent); }
+  .pricing-card:not(.featured) .pricing-cta:hover { background: var(--accent-bg); }
+
+  /* TESTIMONIALS */
+  .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; margin-top: 3rem; }
+  .testi-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; }
+  .testi-stars { color: #f59e0b; font-size: 14px; margin-bottom: 10px; }
+  .testi-text { font-size: 14px; color: var(--ink2); line-height: 1.7; margin-bottom: 1rem; font-style: italic; }
+  .testi-author { display: flex; align-items: center; gap: 10px; }
+  .testi-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent-bg); color: var(--accent); font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .testi-name { font-size: 13px; font-weight: 700; }
+  .testi-role { font-size: 12px; color: var(--ink3); }
+
+  /* FAQ */
+  .faq-list { margin-top: 2.5rem; max-width: 680px; }
+  .faq-item { border-bottom: 1px solid var(--border); }
+  .faq-q { width: 100%; text-align: left; padding: 1.1rem 0; font-size: 15px; font-weight: 600; background: none; border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: var(--ink); }
+  .faq-icon { font-size: 18px; color: var(--ink3); transition: transform .2s; flex-shrink: 0; }
+  .faq-item.open .faq-icon { transform: rotate(45deg); }
+  .faq-a { font-size: 14px; color: var(--ink2); line-height: 1.75; padding-bottom: 1rem; display: none; }
+  .faq-item.open .faq-a { display: block; }
+
+  /* CTA SECTION */
+  .cta-section { background: var(--ink); color: #fff; text-align: center; }
+  .cta-section .section-title { color: #fff; }
+  .cta-sub { font-size: 1rem; color: #aaa; max-width: 440px; margin: .75rem auto 2rem; line-height: 1.7; }
+  .cta-section .btn-primary { background: #fff; color: var(--ink); font-size: 15px; }
+  .cta-section .btn-primary:hover { background: #f0f0f0; }
+  .cta-trust { margin-top: 1.25rem; font-size: 13px; color: #666; }
+
+  /* FOOTER */
+  footer { background: var(--bg); border-top: 1px solid var(--border); padding: 2rem; text-align: center; }
+  .footer-logo { font-size: 15px; font-weight: 800; letter-spacing: -.02em; margin-bottom: .5rem; }
+  .footer-logo span { color: var(--accent); }
+  .footer-links { display: flex; justify-content: center; gap: 1.5rem; margin-bottom: .75rem; flex-wrap: wrap; }
+  .footer-links a { font-size: 13px; color: var(--ink3); text-decoration: none; }
+  .footer-links a:hover { color: var(--ink); }
+  .footer-copy { font-size: 12px; color: var(--ink3); }
+
+  @media (max-width: 640px) {
+    nav { padding: .75rem 1rem; }
+    .nav-links { display: none; }
+    .hero { padding: 4rem 1.25rem 3rem; }
+    .ba-grid { grid-template-columns: 1fr; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    section { padding: 3.5rem 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Resume<span>Pro</span></div>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+    <a href="intake-form.html" class="nav-cta">Get started</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">✦ 48-hour turnaround</div>
+  <h1>Your resume, rewritten to <em>land interviews</em></h1>
+  <p class="hero-sub">Expert-quality resume rewrites that pass ATS screening and make hiring managers stop scrolling. Done in 48 hours or less.</p>
+  <div class="hero-actions">
+    <a href="intake-form.html" class="btn-primary">Rewrite my resume →</a>
+    <a href="#how" class="btn-ghost">See how it works</a>
+  </div>
+  <div class="hero-trust">
+    <div class="trust-item"><span class="trust-check">✓</span> ATS-optimized</div>
+    <div class="trust-item"><span class="trust-check">✓</span> 48hr turnaround</div>
+    <div class="trust-item"><span class="trust-check">✓</span> 1 free revision</div>
+    <div class="trust-item"><span class="trust-check">✓</span> 100% satisfaction guarantee</div>
+  </div>
+</div>
+
+<!-- PROOF BAR -->
+<div class="proof-bar">
+  <div class="proof-inner">
+    <div class="proof-stat"><div class="proof-num">340+</div><div class="proof-label">Resumes rewritten</div></div>
+    <div class="proof-stat"><div class="proof-num">4.9★</div><div class="proof-label">Average rating</div></div>
+    <div class="proof-stat"><div class="proof-num">78%</div><div class="proof-label">Get an interview within 2 weeks</div></div>
+    <div class="proof-stat"><div class="proof-num">48hr</div><div class="proof-label">Average delivery time</div></div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="section-inner">
+    <div class="section-eyebrow">How it works</div>
+    <div class="section-title">Four steps, 48 hours, done</div>
+    <div class="section-desc">No Zoom calls. No back-and-forth. Just a simple intake form and a polished resume in your inbox.</div>
+    <div class="steps-grid">
+      <div class="step-card"><div class="step-num">1</div><div class="step-title">Fill in the intake form</div><div class="step-desc">5 minutes. Tell us your target role, your top achievements, and paste in a job description you're applying to.</div></div>
+      <div class="step-card"><div class="step-num">2</div><div class="step-title">We get to work</div><div class="step-desc">A real human writer rewrites your resume with ATS keywords, achievement-focused bullets, and a compelling summary.</div></div>
+      <div class="step-card"><div class="step-num">3</div><div class="step-title">Receive your documents</div><div class="step-desc">Your rewritten resume lands in your inbox as a Google Doc within 48 hours — ready to customize and send.</div></div>
+      <div class="step-card"><div class="step-num">4</div><div class="step-title">Request a revision</div><div class="step-desc">Not quite right? Reply to the email with your feedback and we'll revise it — usually within 24 hours.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- BEFORE/AFTER -->
+<section>
+  <div class="section-inner">
+    <div class="section-eyebrow">Before and after</div>
+    <div class="section-title">The difference is immediate</div>
+    <div class="section-desc">Here's a real example of how we transform a generic bullet into one that gets interviews.</div>
+    <div class="ba-grid">
+      <div class="ba-card before">
+        <div class="ba-label">✗ Before</div>
+        <div class="ba-content">
+          <p>• Responsible for managing social media accounts</p><br>
+          <p>• Helped grow the company's online presence</p><br>
+          <p>• Worked with marketing team on campaigns</p>
+        </div>
+      </div>
+      <div class="ba-card after">
+        <div class="ba-label">✓ After</div>
+        <div class="ba-content">
+          <p>• <strong>Grew Instagram following 4× to 40,000 followers</strong> in 8 months by shifting to short-form video content, lifting post engagement rate from 1.2% to 6.8%</p><br>
+          <p>• <strong>Spearheaded 3 multi-channel campaigns</strong> that generated $180K in attributed pipeline, collaborating with a 6-person marketing team across email, paid, and organic</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="section-inner">
+    <div class="section-eyebrow">Pricing</div>
+    <div class="section-title">Simple, flat-rate pricing</div>
+    <div class="section-desc">No subscriptions. Pay once, own your documents forever.</div>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="pricing-name">Resume refresh</div>
+        <div class="pricing-price">$79</div>
+        <div class="pricing-turnaround">Delivered in 48 hours</div>
+        <ul class="pricing-features">
+          <li>Full resume rewrite</li>
+          <li>ATS keyword optimization</li>
+          <li>Achievement-focused bullets</li>
+          <li>Professional summary</li>
+          <li>1 revision included</li>
+        </ul>
+        <a href="intake-form.html" class="pricing-cta">Get started</a>
+      </div>
+      <div class="pricing-card featured">
+        <div class="featured-badge">Most popular</div>
+        <div class="pricing-name">Career bundle</div>
+        <div class="pricing-price">$149</div>
+        <div class="pricing-turnaround">Delivered in 48 hours</div>
+        <ul class="pricing-features">
+          <li>Everything in Resume refresh</li>
+          <li>LinkedIn profile rewrite</li>
+          <li>Optimized headline and summary</li>
+          <li>Skills section recommendations</li>
+          <li>2 revisions included</li>
+        </ul>
+        <a href="intake-form.html" class="pricing-cta">Get started</a>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-name">Job seeker pro</div>
+        <div class="pricing-price">$249</div>
+        <div class="pricing-turnaround">Delivered in 48 hours</div>
+        <ul class="pricing-features">
+          <li>Everything in Career bundle</li>
+          <li>Tailored cover letter</li>
+          <li>3 job-specific resume versions</li>
+          <li>Unlimited revisions for 7 days</li>
+          <li>Priority support</li>
+        </ul>
+        <a href="intake-form.html" class="pricing-cta">Get started</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section>
+  <div class="section-inner">
+    <div class="section-eyebrow">What clients say</div>
+    <div class="section-title">Real results, real people</div>
+    <div class="testimonials-grid">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"I'd been applying for months with zero callbacks. Submitted the rewritten resume and had 3 interviews booked within 10 days. Worth every penny."</div>
+        <div class="testi-author"><div class="testi-avatar">JM</div><div><div class="testi-name">Jamie M.</div><div class="testi-role">Software Engineer → Senior SWE at fintech startup</div></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"The before/after was shocking. My old resume read like a job description — the new one actually sounds like I accomplished things. Highly recommend."</div>
+        <div class="testi-author"><div class="testi-avatar">SR</div><div><div class="testi-name">Sarah R.</div><div class="testi-role">Marketing Manager → Director of Growth</div></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"Fast, professional, and the LinkedIn rewrite got me two recruiter messages the week I updated my profile. The Career Bundle is a steal at $149."</div>
+        <div class="testi-author"><div class="testi-avatar">DK</div><div><div class="testi-name">David K.</div><div class="testi-role">Operations Lead → VP of Operations</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="how" id="faq">
+  <div class="section-inner">
+    <div class="section-eyebrow">FAQ</div>
+    <div class="section-title">Common questions</div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">How long does it take? <span class="faq-icon">+</span></button>
+        <div class="faq-a">Standard turnaround is 48 hours from when we receive your completed intake form. Rush 24-hour delivery is available for an additional $30.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">What format will I receive my documents in? <span class="faq-icon">+</span></button>
+        <div class="faq-a">You'll receive a Google Doc link you can edit, download as PDF, or download as Word (.docx). The format is clean text — no fancy templates that break in ATS systems.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">What if I'm not happy with the result? <span class="faq-icon">+</span></button>
+        <div class="faq-a">Every order includes at least one revision. Just reply to your delivery email with specific feedback and we'll revise within 24 hours. If you're still not satisfied after revisions, we'll refund you in full — no questions asked.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Do you work with all industries and experience levels? <span class="faq-icon">+</span></button>
+        <div class="faq-a">Yes — we've worked with everyone from new graduates to C-suite executives across tech, finance, healthcare, marketing, operations, and more. The intake form helps us tailor the approach for your specific field.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">What's the difference between the $149 and $249 packages? <span class="faq-icon">+</span></button>
+        <div class="faq-a">The Career Bundle ($149) gives you a rewritten resume plus a LinkedIn profile overhaul. The Job Seeker Pro ($249) adds a tailored cover letter, three job-specific resume versions (optimized for different roles or companies you're targeting), and unlimited revisions for 7 days.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Is my information kept confidential? <span class="faq-icon">+</span></button>
+        <div class="faq-a">Absolutely. Your intake information and resume are only used to produce your deliverables and are never shared with third parties. We delete client files 30 days after delivery.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="section-inner">
+    <div class="section-title">Ready to land more interviews?</div>
+    <div class="cta-sub">Join hundreds of professionals who upgraded their resume and started hearing back. Takes 5 minutes to submit your intake.</div>
+    <a href="intake-form.html" class="btn-primary">Get started — from $79 →</a>
+    <div class="cta-trust">48-hour delivery · 1 free revision · 100% satisfaction guarantee</div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">Resume<span>Pro</span></div>
+  <div class="footer-links">
+    <a href="#how">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+    <a href="intake-form.html">Get started</a>
+  </div>
+  <div class="footer-copy">© 2026 ResumePro. All rights reserved.</div>
+</footer>
+
+<script>
+function toggleFaq(btn) {
+  const item = btn.parentElement;
+  item.classList.toggle('open');
+}
+</script>
+</body>
+</html>

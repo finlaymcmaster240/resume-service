@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resume Processor — Internal Tool</title>
+<style>
+  :root {
+    --ink: #1a1a1a; --ink2: #555; --ink3: #888;
+    --border: #e0e0e0; --bg: #f5f5f3; --white: #fff;
+    --accent: #2563eb; --accent-bg: #eff6ff;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --mono: 'Courier New', monospace;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+
+  .topbar { background: var(--ink); color: #fff; padding: .75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+  .topbar-title { font-size: 14px; font-weight: 600; }
+  .topbar-tag { font-size: 11px; background: #333; padding: 3px 8px; border-radius: 4px; color: #aaa; }
+
+  .layout { display: grid; grid-template-columns: 340px 1fr; min-height: calc(100vh - 44px); }
+
+  .sidebar { background: var(--white); border-right: 1px solid var(--border); padding: 1.5rem; overflow-y: auto; }
+  .sidebar-section { margin-bottom: 1.5rem; }
+  .sidebar-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink3); font-weight: 600; margin-bottom: 8px; }
+
+  .field { margin-bottom: 1rem; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 13px; color: var(--ink); background: var(--white); outline: none;
+    transition: border-color .15s; font-family: inherit;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+  .field textarea { resize: vertical; font-family: var(--mono); font-size: 12px; line-height: 1.5; }
+
+  .mode-tabs { display: flex; border: 1.5px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 1rem; }
+  .mode-tab { flex: 1; padding: 7px; font-size: 12px; font-weight: 600; text-align: center; cursor: pointer; background: var(--white); color: var(--ink3); border: none; transition: background .15s, color .15s; }
+  .mode-tab.active { background: var(--accent); color: #fff; }
+
+  .run-btn { width: 100%; padding: 11px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity .15s; margin-top: .5rem; }
+  .run-btn:hover { opacity: .88; }
+  .run-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .copy-btn { width: 100%; padding: 9px; background: none; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink2); margin-top: 8px; transition: border-color .15s; }
+  .copy-btn:hover { border-color: var(--ink2); }
+
+  .main { padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
+
+  .output-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .output-header { padding: .75rem 1rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg); }
+  .output-title { font-size: 13px; font-weight: 700; color: var(--ink); }
+  .output-badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; }
+  .badge-blue { background: var(--accent-bg); color: var(--accent); }
+  .badge-green { background: var(--success-bg); color: var(--success); }
+  .badge-amber { background: var(--warning-bg); color: var(--warning); }
+  .output-body { padding: 1rem; font-size: 13px; line-height: 1.75; color: var(--ink); white-space: pre-wrap; font-family: var(--mono); min-height: 120px; }
+  .output-body.prose { font-family: inherit; }
+
+  .placeholder { color: var(--ink3); font-style: italic; font-family: inherit; }
+
+  .status { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: .5rem 0; }
+  .spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .token-bar { display: flex; gap: 1rem; padding: .5rem 1rem; background: var(--bg); border-top: 1px solid var(--border); font-size: 11px; color: var(--ink3); }
+
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">Resume Processor — Internal Tool</div>
+  <div class="topbar-tag">Operator only</div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Output mode</div>
+      <div class="mode-tabs">
+        <button class="mode-tab active" onclick="setMode('resume', this)">Resume</button>
+        <button class="mode-tab" onclick="setMode('linkedin', this)">LinkedIn</button>
+        <button class="mode-tab" onclick="setMode('cover', this)">Cover letter</button>
+        <button class="mode-tab" onclick="setMode('tailor', this)">Tailor</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Client intake</div>
+      <div class="field"><label>Full name</label><input type="text" id="clientName" placeholder="Alex Johnson"></div>
+      <div class="field"><label>Current role</label><input type="text" id="currentRole" placeholder="Senior Marketing Manager"></div>
+      <div class="field"><label>Target role</label><input type="text" id="targetRole" placeholder="Head of Marketing"></div>
+      <div class="field">
+        <label>Industry</label>
+        <select id="industry">
+          <option>Technology / Software</option><option>Finance / Banking</option>
+          <option>Healthcare</option><option>Marketing / Advertising</option>
+          <option>Sales</option><option>Operations</option>
+          <option>Product / Design</option><option>Engineering</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Years of experience</label>
+        <select id="yearsExp">
+          <option>0–2 years</option><option>3–5 years</option>
+          <option>6–10 years</option><option>11–15 years</option><option>15+ years</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Achievements (client's own words)</div>
+      <div class="field"><input type="text" id="ach1" placeholder="Achievement 1..."></div>
+      <div class="field"><input type="text" id="ach2" placeholder="Achievement 2..."></div>
+      <div class="field"><input type="text" id="ach3" placeholder="Achievement 3..."></div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Job description</div>
+      <div class="field"><textarea id="jobDesc" rows="6" placeholder="Paste target JD here..."></textarea></div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Current resume text</div>
+      <div class="field"><textarea id="resumeText" rows="10" placeholder="Paste client's existing resume text..."></textarea></div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Notes / special instructions</div>
+      <div class="field"><textarea id="notes" rows="3" placeholder="Career gaps, tone preferences, etc."></textarea></div>
+    </div>
+
+    <button class="run-btn" id="runBtn" onclick="runProcessor()">Generate ↗</button>
+    <button class="copy-btn" id="copyBtn" onclick="copyAll()">Copy all output</button>
+  </div>
+
+  <div class="main" id="mainArea">
+    <div class="output-card">
+      <div class="output-header">
+        <div class="output-title">Output will appear here</div>
+        <div class="output-badge badge-blue">Ready</div>
+      </div>
+      <div class="output-body prose">
+        <span class="placeholder">Fill in the client intake on the left and click "Generate" to produce the rewritten documents. Each run takes about 30–60 seconds.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentMode = 'resume';
+
+function setMode(mode, el) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function buildPrompt(mode) {
+  const name = document.getElementById('clientName').value;
+  const current = document.getElementById('currentRole').value;
+  const target = document.getElementById('targetRole').value;
+  const industry = document.getElementById('industry').value;
+  const exp = document.getElementById('yearsExp').value;
+  const a1 = document.getElementById('ach1').value;
+  const a2 = document.getElementById('ach2').value;
+  const a3 = document.getElementById('ach3').value;
+  const jd = document.getElementById('jobDesc').value;
+  const resume = document.getElementById('resumeText').value;
+  const notes = document.getElementById('notes').value;
+
+  const intake = `
+CLIENT INTAKE:
+Name: ${name}
+Current role: ${current}
+Target role: ${target}
+Industry: ${industry}
+Years of experience: ${exp}
+Achievement 1: ${a1}
+Achievement 2: ${a2}
+Achievement 3: ${a3}
+${notes ? 'Special notes: ' + notes : ''}
+
+TARGET JOB DESCRIPTION:
+${jd || '(No JD provided — optimize for the target role generally)'}
+
+CURRENT RESUME:
+${resume || '(No resume provided — generate from scratch based on intake)'}`;
+
+  const prompts = {
+    resume: `You are an expert resume writer with 15 years of experience. You write resumes that pass ATS screening and compel hiring managers.
+
+Rules:
+- Lead every bullet with a strong action verb (Spearheaded, Engineered, Generated, Reduced, Built, etc.)
+- Quantify achievements wherever possible — numbers, percentages, dollar amounts, timeframes
+- Mirror keywords from the target job description naturally
+- Keep summary to 3 sentences: who they are, what they do best, what they're seeking
+- Clean text formatting only — no tables, columns, or graphics
+- Remove all first-person pronouns
+- One page for under 10 years experience, two pages max otherwise
+
+${intake}
+
+OUTPUT:
+Write the complete rewritten resume in this order:
+1. Name and contact block (use placeholder contact info if not provided)
+2. Professional summary (3 sentences)
+3. Core competencies (8–12 keywords, comma-separated)
+4. Work experience (reverse chronological, 3–5 bullets per role)
+5. Education
+6. Certifications or Skills if relevant
+
+Then add a section titled "--- EDITOR'S NOTES ---" with 5–6 bullet points explaining the key changes made and why. This helps the operator during review.`,
+
+    linkedin: `You are an expert LinkedIn profile writer who helps professionals attract recruiters.
+
+Rules:
+- Headline: target job title + 2–3 value keywords, under 220 characters
+- About: first person, conversational but professional, 3–4 short paragraphs, end with CTA
+- Experience bullets: achievement-focused, warmer tone than a resume
+- Prioritize the 5 skills most relevant to the target role
+
+${intake}
+
+OUTPUT:
+1. New headline (+ 1-line rationale for why it works)
+2. New About section (ready to paste)
+3. Featured section blurb (1–2 sentences for a pinned post)
+4. Top 5 skills to pin
+5. One sentence on what to ask connections to endorse them for`,
+
+    cover: `You are an expert cover letter writer. You write letters that are concise, specific, and human — never generic.
+
+Rules:
+- Never open with "I am writing to express my interest..."
+- 3 paragraphs max: hook + fit, best relevant achievement, why this company
+- 250–320 words total
+- Match company tone from the JD
+- End with confidence, not desperation
+
+${intake}
+
+OUTPUT:
+Write the complete cover letter, then add 2 alternative opening lines they could swap in.`,
+
+    tailor: `You are an expert resume strategist. Tailor the provided resume to the specific job description for maximum ATS match — without fabricating anything.
+
+Rules:
+- Reorder bullets so most relevant achievements appear first
+- Swap in JD keywords wherever they naturally fit
+- Adjust professional summary to mirror the JD's exact language for the title and top 3 requirements
+- Flag any JD requirements the client doesn't have — suggest how to address gaps honestly
+- Do not invent experience or credentials
+
+${intake}
+
+OUTPUT:
+1. Tailored resume (full, ready to submit)
+2. Match report — 5 bullet points covering: keywords added, bullets reordered, gaps identified, and one honest suggestion for addressing the biggest gap`
+  };
+
+  return prompts[mode];
+}
+
+async function runProcessor() {
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+
+  const mainArea = document.getElementById('mainArea');
+  mainArea.innerHTML = `
+    <div class="output-card">
+      <div class="output-header">
+        <div class="output-title">Generating...</div>
+        <div class="output-badge badge-amber">Processing</div>
+      </div>
+      <div class="output-body prose">
+        <div class="status"><div class="spinner"></div> Claude is writing — this takes 30–60 seconds...</div>
+      </div>
+    </div>`;
+
+  try {
+    const prompt = buildPrompt(currentMode);
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: 'You are an expert resume and career documents writer. Follow all instructions precisely. Produce clean, professional output ready for immediate delivery to clients.',
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content?.map(b => b.text || '').join('\n') || 'No output received.';
+
+    const modeLabels = { resume: 'Resume rewrite', linkedin: 'LinkedIn profile', cover: 'Cover letter', tailor: 'Job-specific tailoring' };
+
+    const parts = text.split('--- EDITOR\'S NOTES ---');
+    const mainOutput = parts[0].trim();
+    const editorNotes = parts[1] ? parts[1].trim() : null;
+
+    let cards = `
+      <div class="output-card">
+        <div class="output-header">
+          <div class="output-title">${modeLabels[currentMode]}</div>
+          <div class="output-badge badge-green">Complete</div>
+        </div>
+        <div class="output-body">${mainOutput}</div>
+        <div class="token-bar">
+          <span>Tokens used: ~${Math.round(text.length / 4)}</span>
+          <span>Mode: ${currentMode}</span>
+          <span>Model: claude-sonnet-4-6</span>
+        </div>
+      </div>`;
+
+    if (editorNotes) {
+      cards += `
+        <div class="output-card">
+          <div class="output-header">
+            <div class="output-title">Editor's notes</div>
+            <div class="output-badge badge-amber">Review</div>
+          </div>
+          <div class="output-body prose">${editorNotes}</div>
+        </div>`;
+    }
+
+    mainArea.innerHTML = cards;
+    window._lastOutput = text;
+
+  } catch (err) {
+    mainArea.innerHTML = `
+      <div class="output-card">
+        <div class="output-header"><div class="output-title">Error</div><div class="output-badge" style="background:#fee2e2;color:#dc2626">Failed</div></div>
+        <div class="output-body prose" style="color:#dc2626">Something went wrong: ${err.message}<br><br>Check that the API is accessible and try again.</div>
+      </div>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Generate ↗';
+}
+
+function copyAll() {
+  if (window._lastOutput) {
+    navigator.clipboard.writeText(window._lastOutput).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = '✓ Copied to clipboard';
+      setTimeout(() => btn.textContent = 'Copy all output', 2000);
+    });
+  }
+}
+</script>
+</body>
+</html>

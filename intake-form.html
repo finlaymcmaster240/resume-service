@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resume Optimizer — Client Intake</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --ink2: #555;
+    --ink3: #888;
+    --border: #e0e0e0;
+    --bg: #f8f8f6;
+    --white: #ffffff;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --success: #16a34a;
+    --radius: 10px;
+    --mono: 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+
+  .header { background: var(--white); border-bottom: 1px solid var(--border); padding: 1.25rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
+  .logo span { color: var(--accent); }
+  .header-tag { font-size: 12px; color: var(--ink3); background: var(--bg); border: 1px solid var(--border); padding: 4px 10px; border-radius: 20px; }
+
+  .progress-bar { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 2rem; }
+  .steps { display: flex; gap: 0; max-width: 640px; margin: 0 auto; }
+  .step { flex: 1; padding: 14px 0; font-size: 12px; color: var(--ink3); border-bottom: 2px solid transparent; display: flex; align-items: center; gap: 6px; cursor: default; }
+  .step.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .step.done { color: var(--success); border-bottom-color: var(--success); }
+  .step-num { width: 20px; height: 20px; border-radius: 50%; background: currentColor; color: var(--white); font-size: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step.done .step-num::after { content: '✓'; }
+
+  .main { max-width: 640px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .page-heading { margin-bottom: 2rem; }
+  .page-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); font-weight: 600; margin-bottom: 8px; }
+  .page-title { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; color: var(--ink); margin-bottom: 6px; }
+  .page-desc { font-size: 14px; color: var(--ink2); line-height: 1.6; }
+
+  .field { margin-bottom: 1.5rem; }
+  .field label { display: block; font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+  .field .hint { font-size: 12px; color: var(--ink3); margin-bottom: 6px; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--radius);
+    font-size: 14px; color: var(--ink); background: var(--white); outline: none;
+    transition: border-color .15s; font-family: inherit;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+  .field textarea { resize: vertical; line-height: 1.6; }
+  .field .char-count { font-size: 11px; color: var(--ink3); text-align: right; margin-top: 4px; }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: var(--radius); padding: 2rem;
+    text-align: center; cursor: pointer; transition: border-color .15s, background .15s;
+    background: var(--white);
+  }
+  .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: var(--accent-light); }
+  .upload-icon { font-size: 28px; margin-bottom: 8px; }
+  .upload-label { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+  .upload-hint { font-size: 12px; color: var(--ink3); }
+  .upload-zone input { display: none; }
+  .file-chosen { margin-top: 10px; font-size: 13px; color: var(--success); font-weight: 500; }
+
+  .tier-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .tier-card {
+    border: 2px solid var(--border); border-radius: var(--radius); padding: 14px;
+    cursor: pointer; transition: border-color .15s, background .15s; background: var(--white);
+  }
+  .tier-card:hover { border-color: var(--accent); }
+  .tier-card.selected { border-color: var(--accent); background: var(--accent-light); }
+  .tier-card input { display: none; }
+  .tier-name { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+  .tier-price { font-size: 20px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+  .tier-features { list-style: none; font-size: 11px; color: var(--ink2); line-height: 1.8; }
+  .tier-features li::before { content: '✓  '; color: var(--success); }
+
+  .achievement-list { display: flex; flex-direction: column; gap: 8px; }
+  .achievement-item { display: flex; gap: 8px; align-items: flex-start; }
+  .achievement-num { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 10px; }
+  .achievement-item input { flex: 1; }
+
+  .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 2.5rem; }
+  .btn { padding: 11px 24px; border-radius: var(--radius); font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: opacity .15s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { opacity: .88; }
+  .btn-ghost { background: none; color: var(--ink2); border: 1.5px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--ink2); }
+
+  .summary-card { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1rem; }
+  .summary-row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-key { color: var(--ink3); }
+  .summary-val { color: var(--ink); font-weight: 500; max-width: 60%; text-align: right; }
+
+  .success-page { text-align: center; padding: 3rem 1rem; }
+  .success-icon { font-size: 48px; margin-bottom: 1rem; }
+  .success-title { font-size: 26px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 10px; }
+  .success-desc { font-size: 15px; color: var(--ink2); line-height: 1.7; max-width: 400px; margin: 0 auto 1.5rem; }
+  .success-detail { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; font-size: 13px; color: var(--ink2); max-width: 400px; margin: 0 auto; text-align: left; line-height: 1.8; }
+
+  .required { color: var(--accent); }
+
+  @media (max-width: 540px) {
+    .field-row { grid-template-columns: 1fr; }
+    .tier-grid { grid-template-columns: 1fr; }
+    .steps .step-label { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Resume<span>Pro</span></div>
+  <div class="header-tag">Secure intake form</div>
+</div>
+
+<div class="progress-bar">
+  <div class="steps">
+    <div class="step active" id="s1"><div class="step-num">1</div><span class="step-label">Package</span></div>
+    <div class="step" id="s2"><div class="step-num">2</div><span class="step-label">About you</span></div>
+    <div class="step" id="s3"><div class="step-num">3</div><span class="step-label">Your resume</span></div>
+    <div class="step" id="s4"><div class="step-num">4</div><span class="step-label">Review</span></div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Page 1: Package -->
+  <div class="page active" id="page1">
+    <div class="page-heading">
+      <div class="page-eyebrow">Step 1 of 4</div>
+      <div class="page-title">Choose your package</div>
+      <div class="page-desc">All packages include ATS optimization and delivery within 48 hours.</div>
+    </div>
+
+    <div class="field">
+      <div class="tier-grid">
+        <label class="tier-card" onclick="selectTier(this, 'resume-refresh')">
+          <input type="radio" name="tier" value="resume-refresh">
+          <div class="tier-name">Resume refresh</div>
+          <div class="tier-price">$79</div>
+          <ul class="tier-features">
+            <li>Full resume rewrite</li>
+            <li>ATS keyword optimization</li>
+            <li>48hr turnaround</li>
+            <li>1 revision</li>
+          </ul>
+        </label>
+        <label class="tier-card selected" onclick="selectTier(this, 'career-bundle')">
+          <input type="radio" name="tier" value="career-bundle" checked>
+          <div class="tier-name">Career bundle ⭐</div>
+          <div class="tier-price">$149</div>
+          <ul class="tier-features">
+            <li>Resume rewrite</li>
+            <li>LinkedIn profile rewrite</li>
+            <li>Headline + summary</li>
+            <li>2 revisions</li>
+          </ul>
+        </label>
+        <label class="tier-card" onclick="selectTier(this, 'job-seeker-pro')">
+          <input type="radio" name="tier" value="job-seeker-pro">
+          <div class="tier-name">Job seeker pro</div>
+          <div class="tier-price">$249</div>
+          <ul class="tier-features">
+            <li>Everything in Bundle</li>
+            <li>Cover letter</li>
+            <li>3 role-specific rewrites</li>
+            <li>Unlimited revisions, 7 days</li>
+          </ul>
+        </label>
+      </div>
+    </div>
+
+    <div class="nav">
+      <div></div>
+      <button class="btn btn-primary" onclick="goTo(2)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- Page 2: About you -->
+  <div class="page" id="page2">
+    <div class="page-heading">
+      <div class="page-eyebrow">Step 2 of 4</div>
+      <div class="page-title">Tell me about you</div>
+      <div class="page-desc">The more specific you are, the better your results. This takes about 5 minutes.</div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>First name <span class="required">*</span></label>
+        <input type="text" id="firstName" placeholder="Alex" required>
+      </div>
+      <div class="field">
+        <label>Last name <span class="required">*</span></label>
+        <input type="text" id="lastName" placeholder="Johnson">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Email address <span class="required">*</span></label>
+      <div class="hint">Where we'll deliver your rewritten documents.</div>
+      <input type="email" id="email" placeholder="alex@email.com">
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Current job title <span class="required">*</span></label>
+        <input type="text" id="currentRole" placeholder="Senior Marketing Manager">
+      </div>
+      <div class="field">
+        <label>Target job title <span class="required">*</span></label>
+        <input type="text" id="targetRole" placeholder="Head of Marketing">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Industry <span class="required">*</span></label>
+        <select id="industry">
+          <option value="">Select industry...</option>
+          <option>Technology / Software</option>
+          <option>Finance / Banking</option>
+          <option>Healthcare</option>
+          <option>Marketing / Advertising</option>
+          <option>Sales / Business Development</option>
+          <option>Operations / Logistics</option>
+          <option>Product / Design</option>
+          <option>Engineering</option>
+          <option>Legal</option>
+          <option>Education</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Years of experience <span class="required">*</span></label>
+        <select id="yearsExp">
+          <option value="">Select...</option>
+          <option>0–2 years</option>
+          <option>3–5 years</option>
+          <option>6–10 years</option>
+          <option>11–15 years</option>
+          <option>15+ years</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Top 3 career achievements <span class="required">*</span></label>
+      <div class="hint">In your own words — numbers and specifics help a lot. ("Grew email list from 5k to 40k in 6 months")</div>
+      <div class="achievement-list">
+        <div class="achievement-item"><div class="achievement-num">1</div><input type="text" id="ach1" placeholder="Your best achievement..."></div>
+        <div class="achievement-item"><div class="achievement-num">2</div><input type="text" id="ach2" placeholder="Second achievement..."></div>
+        <div class="achievement-item"><div class="achievement-num">3</div><input type="text" id="ach3" placeholder="Third achievement..."></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Target job description</label>
+      <div class="hint">Paste the full JD from a role you're applying to. This dramatically improves keyword matching.</div>
+      <textarea id="jobDesc" rows="7" placeholder="Paste the job description here..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Anything else we should know?</label>
+      <div class="hint">Career gaps, career changes, specific things you want emphasized, or tone preferences.</div>
+      <textarea id="notes" rows="3" placeholder="Optional notes..."></textarea>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-ghost" onclick="goTo(1)">← Back</button>
+      <button class="btn btn-primary" onclick="goTo(3)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- Page 3: Resume upload -->
+  <div class="page" id="page3">
+    <div class="page-heading">
+      <div class="page-eyebrow">Step 3 of 4</div>
+      <div class="page-title">Upload your current resume</div>
+      <div class="page-desc">We'll use this as the base. PDF or Word doc, any format is fine.</div>
+    </div>
+
+    <div class="field">
+      <label>Resume file <span class="required">*</span></label>
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('resumeFile').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+        <input type="file" id="resumeFile" accept=".pdf,.doc,.docx,.txt" onchange="handleFileChange(event)">
+        <div class="upload-icon">📄</div>
+        <div class="upload-label">Click to upload or drag and drop</div>
+        <div class="upload-hint">PDF, DOC, DOCX or TXT — max 5MB</div>
+        <div class="file-chosen" id="fileChosen" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Or paste your resume text</label>
+      <div class="hint">If you don't have a file handy, paste the text of your resume here.</div>
+      <textarea id="resumeText" rows="12" placeholder="Paste resume text here..." style="font-family: var(--mono); font-size: 12px;"></textarea>
+      <div class="char-count" id="charCount">0 characters</div>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-ghost" onclick="goTo(2)">← Back</button>
+      <button class="btn btn-primary" onclick="goTo(4)">Review order →</button>
+    </div>
+  </div>
+
+  <!-- Page 4: Review -->
+  <div class="page" id="page4">
+    <div class="page-heading">
+      <div class="page-eyebrow">Step 4 of 4</div>
+      <div class="page-title">Review your order</div>
+      <div class="page-desc">Check everything looks right before we get started.</div>
+    </div>
+
+    <div class="summary-card" id="summaryCard"></div>
+
+    <div class="field" style="margin-top:1rem">
+      <label>Preferred turnaround</label>
+      <select id="turnaround">
+        <option value="standard">Standard — 48 hours (included)</option>
+        <option value="rush">Rush — 24 hours (+$30)</option>
+      </select>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-ghost" onclick="goTo(3)">← Back</button>
+      <button class="btn btn-primary" onclick="submitForm()">Submit order →</button>
+    </div>
+  </div>
+
+  <!-- Success -->
+  <div class="page" id="pageSuccess">
+    <div class="success-page">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Order received!</div>
+      <div class="success-desc">You'll hear back within 48 hours with your rewritten documents. Check your email for a confirmation.</div>
+      <div class="success-detail">
+        <strong>What happens next:</strong><br>
+        1. You'll get an email confirmation in the next few minutes.<br>
+        2. We'll review your intake and get to work.<br>
+        3. Your rewritten resume lands in your inbox within 48 hours.<br>
+        4. You have one round of revisions — just reply to the email.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let currentPage = 1;
+let selectedTier = 'career-bundle';
+const tierPrices = { 'resume-refresh': '$79', 'career-bundle': '$149', 'job-seeker-pro': '$249' };
+const tierNames = { 'resume-refresh': 'Resume refresh', 'career-bundle': 'Career bundle', 'job-seeker-pro': 'Job seeker pro' };
+
+function selectTier(el, val) {
+  document.querySelectorAll('.tier-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTier = val;
+}
+
+function goTo(n) {
+  if (n === 4) buildSummary();
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.step').forEach((s, i) => {
+    s.classList.remove('active', 'done');
+    if (i + 1 < n) s.classList.add('done');
+    if (i + 1 === n) s.classList.add('active');
+  });
+  document.getElementById('page' + n).classList.add('active');
+  currentPage = n;
+  window.scrollTo(0, 0);
+}
+
+function buildSummary() {
+  const rows = [
+    ['Package', tierNames[selectedTier] + ' — ' + tierPrices[selectedTier]],
+    ['Name', (document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value).trim() || '—'],
+    ['Email', document.getElementById('email').value || '—'],
+    ['Current role', document.getElementById('currentRole').value || '—'],
+    ['Target role', document.getElementById('targetRole').value || '—'],
+    ['Industry', document.getElementById('industry').value || '—'],
+    ['Experience', document.getElementById('yearsExp').value || '—'],
+    ['Resume', document.getElementById('fileChosen').style.display !== 'none' ? document.getElementById('fileChosen').textContent : (document.getElementById('resumeText').value ? 'Pasted text (' + document.getElementById('resumeText').value.length + ' chars)' : '—')],
+  ];
+  document.getElementById('summaryCard').innerHTML = rows.map(r => `<div class="summary-row"><span class="summary-key">${r[0]}</span><span class="summary-val">${r[1]}</span></div>`).join('');
+}
+
+function handleFileChange(e) {
+  const f = e.target.files[0];
+  if (f) {
+    document.getElementById('fileChosen').textContent = '✓ ' + f.name;
+    document.getElementById('fileChosen').style.display = 'block';
+  }
+}
+function handleDragOver(e) { e.preventDefault(); document.getElementById('uploadZone').classList.add('dragover'); }
+function handleDragLeave() { document.getElementById('uploadZone').classList.remove('dragover'); }
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f) {
+    document.getElementById('fileChosen').textContent = '✓ ' + f.name;
+    document.getElementById('fileChosen').style.display = 'block';
+  }
+}
+
+document.getElementById('resumeText').addEventListener('input', function() {
+  document.getElementById('charCount').textContent = this.value.length.toLocaleString() + ' characters';
+});
+
+function submitForm() {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.step').forEach(s => s.classList.add('done'));
+  document.getElementById('pageSuccess').classList.add('active');
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
